@@ -665,9 +665,13 @@ class Dotcoin:
 
                             if dtc_amount >= 5:
 
-                                spinner_time = parser.isoparse(user['spin_updated_at'])
-                                spinner_time_wib = spinner_time.astimezone(wib)
-                                spinner_ready = (spinner_time_wib + timedelta(hours=8)).strftime('%x %X %Z')
+                                spinner_update = user['spin_updated_at']
+                                if spinner_update is not None:
+                                    spinner_time = parser.isoparse(spinner_update)
+                                    spinner_time_wib = spinner_time.astimezone(wib)
+                                    spinner_ready = (spinner_time_wib + timedelta(hours=8)).strftime('%x %X %Z')
+                                else:
+                                    spinner_ready = "N/A"
 
                                 spin = self.spinner(token)
                                 if spin['success']:
