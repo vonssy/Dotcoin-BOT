@@ -340,7 +340,7 @@ class Dotcoin:
                     return None
     
     def upgrade_dtc_miner(self, token: str, user_id: int, retries=3, delay=2):
-        url = 'https://api.dotcoin.bot/functions/v1/upgradeDTCMiner'
+        url = 'https://api.dotcoin.bot/functions/v1/upgradeMiner/web2'
         self.headers.update({
             'Authorization': f'Bearer {token}',
             'Content-Length': '0',
@@ -351,12 +351,11 @@ class Dotcoin:
         for attempt in range(retries):
             try:
                 response = self.session.post(url, headers=self.headers)
+                if response.status_code in [400, 402, 405]:
+                    return response.json()
+
                 response.raise_for_status()
-                result = response.json()
-                if response.status_code == 200:
-                    return result
-                else:
-                    return None
+                return response.json()
             except (requests.RequestException, ValueError) as e:
                 if attempt < retries - 1:
                     print(
@@ -631,7 +630,7 @@ class Dotcoin:
                     user_id = user['id']
                     miner_level = user['dtc_level']
                     upgrade = self.upgrade_dtc_miner(token, user_id)
-                    if upgrade['success']:
+                    if upgrade and upgrade['success']:
                         self.log(
                             f"{Fore.MAGENTA+Style.BRIGHT}       -> DTC Mining       : {Style.RESET_ALL}"
                             f"{Fore.GREEN+Style.BRIGHT}Upgrade Success{Style.RESET_ALL}"
@@ -640,9 +639,10 @@ class Dotcoin:
                             f"{Fore.WHITE+Style.BRIGHT}{miner_level + 1}{Style.RESET_ALL}"
                         )
                     else:
+                        msg = upgrade.get('message', 'Unknown Error')
                         self.log(
                             f"{Fore.MAGENTA+Style.BRIGHT}       -> DTC Mining       : {Style.RESET_ALL}"
-                            f"{Fore.RED+Style.BRIGHT}Upgrade Failed{Style.RESET_ALL}"
+                            f"{Fore.YELLOW+Style.BRIGHT}{msg}{Style.RESET_ALL}"
                         )
                 else:
                     self.log(
